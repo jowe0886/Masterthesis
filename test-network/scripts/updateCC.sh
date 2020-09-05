@@ -35,9 +35,11 @@ approveForMyOrg() {
   peer lifecycle chaincode approveformyorg -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com \
   --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA --channelID $CHANNEL_NAME --name marbles02_private \
   --version ${VERSION} --collections-config ../chaincode/marbles02_private/collections_config_1.json \
-  --sequence '2' >&log.txt
+  --sequence '2' --init-required >&log.txt
   set +x
   cat log.txt
+  echo "res:" 
+  echo $res
   verifyResult $res "Chaincode definition approved on peer0.org${ORG} on channel '$CHANNEL_NAME' failed"
   echo "===================== Chaincode definition approved on peer0.org${ORG} on channel '$CHANNEL_NAME' ===================== "
   echo
@@ -59,7 +61,7 @@ checkCommitReadiness() {
     set -x
     peer lifecycle chaincode checkcommitreadiness --channelID $CHANNEL_NAME --name marbles02_private \
      --collections-config ../chaincode/marbles02_private/collections_config_1.json  --version ${VERSION} \
-     --sequence '2' --output json  >&log.txt    
+     --sequence '2' --init-required --output json  >&log.txt    
     res=$?
     set +x
     let rc=0
@@ -92,7 +94,7 @@ commitChaincodeDefinition() {
   peer lifecycle chaincode commit -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls $CORE_PEER_TLS_ENABLED \
   --cafile $ORDERER_CA --channelID $CHANNEL_NAME --name marbles02_private $PEER_CONN_PARMS \
   --version ${VERSION}  --collections-config ../chaincode/marbles02_private/collections_config_1.json \
-  --sequence '2' >&log.txt
+  --sequence '2' --init-required  >&log.txt
   res=$?
   set +x
   cat log.txt
@@ -262,13 +264,13 @@ approveForMyOrg 5
 
 
 ## Invoke the chaincode - init function 
-# chaincodeInvokeInit 1 2 3 4 5 
+ chaincodeInvokeInit 1 2 3 4 5 
 
 # sleep 20
 
 # Invoke the chaincode - store data
 
-#chaincodeInvokeInitMarble 1
+chaincodeInvokeInitMarble 1
 
 # Invoke chainode -put private data into implicit private data collection org1
 

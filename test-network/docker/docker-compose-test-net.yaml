@@ -184,7 +184,7 @@ services:
 
   peer0.org1.example.com:
     container_name: peer0.org1.example.com
-    image: udosson/udosson:hyperledger-fabric-peer-golang-jq
+    image: hyperledger/fabric-peer:$IMAGE_TAG
     environment:
       #Generic peer variables
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -231,7 +231,7 @@ services:
   
   peer0.org2.example.com:
     container_name: peer0.org2.example.com
-    image: udosson/udosson:hyperledger-fabric-peer-golang-jq
+    image: hyperledger/fabric-peer:$IMAGE_TAG
     environment:
       #Generic peer variables
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -278,7 +278,7 @@ services:
 
   peer0.org3.example.com:
     container_name: peer0.org3.example.com
-    image: udosson/udosson:hyperledger-fabric-peer-golang-jq
+    image: hyperledger/fabric-peer:$IMAGE_TAG
     environment:
       #Generic peer variables
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -325,7 +325,7 @@ services:
 
   peer0.org4.example.com:
     container_name: peer0.org4.example.com
-    image: udosson/udosson:hyperledger-fabric-peer-golang-jq
+    image: hyperledger/fabric-peer:$IMAGE_TAG
     environment:
       #Generic peer variables
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -372,7 +372,7 @@ services:
 
   peer0.org5.example.com:
     container_name: peer0.org5.example.com
-    image: udosson/udosson:hyperledger-fabric-peer-golang-jq
+    image: hyperledger/fabric-peer:$IMAGE_TAG
     environment:
       #Generic peer variables
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock

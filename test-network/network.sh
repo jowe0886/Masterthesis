@@ -240,10 +240,31 @@ function createOrgs() {
     createOrg2
 
     echo "##########################################################"
+    echo "############ Create Peer Orgs Identities ######################"
+    echo "##########################################################"
+
+    set -x
+    cryptogen generate --config=./organizations/cryptogen/crypto-config-orgs.yaml --output="organizations"
+    res=$?
+    set +x
+    if [ $res -ne 0 ]; then
+      echo "Failed to generate certificates..."
+      exit 1
+    fi
+
+    echo "##########################################################"
     echo "############ Create Orderer Org Identities ###############"
     echo "##########################################################"
 
-    createOrderer
+    set -x
+    cryptogen generate --config=./organizations/cryptogen/crypto-config-orderer.yaml --output="organizations"
+    res=$?
+    set +x
+    if [ $res -ne 0 ]; then
+      echo "Failed to generate certificates..."
+      exit 1
+    fi
+    
 
   fi
 
@@ -384,7 +405,7 @@ function updateCC() {
 # Tear down running network
 function networkDown() {
   # stop org3 containers also in addition to org1 and org2, in case we were running sample to add org3
-  docker-compose -f $COMPOSE_FILE_BASE  down --volumes --remove-orphans
+  docker-compose -f $COMPOSE_FILE_BASE -f $COMPOSE_FILE_CA  down --volumes --remove-orphans
   # Don't remove the generated artifacts -- note, the ledgers are always removed
   if [ "$MODE" != "restart" ]; then
     # Bring down the network, deleting the volumes
