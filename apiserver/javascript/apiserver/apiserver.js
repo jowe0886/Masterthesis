@@ -38,12 +38,12 @@ app.get('/api/queryallcars', async function (req, res) {
         const network = await gateway.getNetwork('mychannel');
 
         // Get the contract from the network.
-        const contract = network.getContract('fabcar');
+        const contract = network.getContract('marbles02_private');
 
         // Evaluate the specified transaction.
         // queryCar transaction - requires 1 argument, ex: ('queryCar', 'CAR4')
         // queryAllCars transaction - requires no arguments, ex: ('queryAllCars')
-        const result = await contract.evaluateTransaction('queryAllCars');
+        const result = await contract.evaluateTransaction("readMarblePrivateDetails", "marble1");
         console.log(`Transaction has been evaluated, result is: ${result.toString()}`);
         res.status(200).json({ response: result.toString() });
 
@@ -98,7 +98,7 @@ app.get('/api/query/:car_index', async function (req, res) {
         const network = await gateway.getNetwork('mychannel');
 
         // Get the contract from the network.
-        const contract = network.getContract('fabcar');
+        const contract = network.getContract('marbles02_private');
 
         // Evaluate the specified transaction.
         // queryCar transaction - requires 1 argument, ex: ('queryCar', 'CAR4')
@@ -117,7 +117,7 @@ app.get('/api/query/:car_index', async function (req, res) {
     }
 });
 
-app.post('/api/addcar/', async function (req, res) {
+app.post('/api/addMarble/', async function (req, res) {
     try {
 
         let ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
@@ -142,14 +142,26 @@ app.post('/api/addcar/', async function (req, res) {
         const network = await gateway.getNetwork('mychannel');
 
         // Get the contract from the network.
-        const contract = network.getContract('fabcar');
+        const contract = network.getContract('marbles02_private');
 
         // Submit the specified transaction.
         // createCar transaction - requires 5 argument, ex: ('createCar', 'CAR12', 'Honda', 'Accord', 'Black', 'Tom')
         // changeCarOwner transaction - requires 2 args , ex: ('changeCarOwner', 'CAR10', 'Dave')
-        await contract.submitTransaction('createCar', req.body.carid, req.body.make, req.body.model, req.body.colour, req.body.owner);
-        console.log('Transaction has been submitted');
-        res.send('Transaction has been submitted');
+
+        //console.log(`Transient data is : ${transientData}`)
+        let marbleData = JSON.parse("{\"name\":\"marble6\",\"color\":\"red\",\"size\":35,\"owner\":\"tom\",\"price\":29}")
+        console.log(`marble data is : ${JSON.stringify(marbleData)}`)
+        console.log(marbleData);
+        let key = 'marble'
+        //Object.keys(marbleData)[1]
+        console.log(key);
+        const transientDataBuffer = {}
+        transientDataBuffer[key] = Buffer.from(JSON.stringify(marbleData))
+        result = await contract.createTransaction('initMarble')
+            .setTransient(transientDataBuffer)
+            .submit()
+
+
 
         // Disconnect from the gateway.
         await gateway.disconnect();
