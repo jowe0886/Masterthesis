@@ -240,18 +240,23 @@ function createOrgs() {
     createOrg2
 
     echo "##########################################################"
-    echo "############ Create Peer Orgs Identities ######################"
+    echo "############ Create Org3 Identities ######################"
     echo "##########################################################"
 
-    set -x
-    cryptogen generate --config=./organizations/cryptogen/crypto-config-orgs.yaml --output="organizations"
-    res=$?
-    set +x
-    if [ $res -ne 0 ]; then
-      echo "Failed to generate certificates..."
-      exit 1
-    fi
+    createOrg3
 
+    echo "##########################################################"
+    echo "############ Create Org4 Identities ######################"
+    echo "##########################################################"
+
+    createOrg4
+
+    echo "##########################################################"
+    echo "############ Create Org5 Identities ######################"
+    echo "##########################################################"
+
+    createOrg5
+    
     echo "##########################################################"
     echo "############ Create Orderer Org Identities ###############"
     echo "##########################################################"
