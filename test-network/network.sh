@@ -379,7 +379,7 @@ sleep 5
     exit 1
   fi
 
-    ./replaceConnectionFiles.sh
+    ./scripts/replaceConnectionFiles.sh
 
 
 }
