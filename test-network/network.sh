@@ -24,7 +24,8 @@ function printHelp() {
   echo "      - 'up' - bring up fabric orderer and peer nodes. No channel is created"
   echo "      - 'up createChannel' - bring up fabric network with one channel"
   echo "      - 'createChannel' - create and join a channel after the network is created"
-  echo "      - 'deployCC' - deploy the fabcar chaincode on the channel"
+  echo "      - 'deployCC' - deploy the chaincode on the channel"
+  echo "      - 'upgradeCC' - upgradeCC the chaincode on the channel"
   echo "      - 'down' - clear the network with docker-compose down"
   echo "      - 'restart' - restart the network"
   echo
@@ -381,7 +382,6 @@ sleep 5
 
     ./scripts/replaceConnectionFiles.sh
 
-
 }
 
 ## Call the script to isntall and instantiate a chaincode on the channel
@@ -397,9 +397,21 @@ function deployCC() {
   exit 0
 }
 
-function updateCC() {
+function upgradeCC() {
 
-  scripts/updateCC.sh $CHANNEL_NAME $CC_SRC_LANGUAGE $VERSION $CLI_DELAY $MAX_RETRY $VERBOSE
+  scripts/upgradeCC.sh $CHANNEL_NAME $CC_SRC_LANGUAGE $VERSION $CLI_DELAY $MAX_RETRY $VERBOSE
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR !!! update chaincode failed"
+    exit 1
+  fi
+
+  exit 0
+}
+
+function upgradeCCDefinition() {
+
+  scripts/upgradeCCDefinition.sh $CHANNEL_NAME $CC_SRC_LANGUAGE $VERSION $CLI_DELAY $MAX_RETRY $VERBOSE
 
   if [ $? -ne 0 ]; then
     echo "ERROR !!! update chaincode failed"
@@ -568,8 +580,12 @@ elif [ "$MODE" == "restart" ]; then
 elif [ "$MODE" == "deployCC" ]; then
   echo "deploying chaincode on channel '${CHANNEL_NAME}'"
   echo
-elif [ "$MODE" == "updateCC" ]; then
-  echo "deploying chaincode on channel '${CHANNEL_NAME}'"
+elif [ "$MODE" == "upgradeCC" ]; then
+  echo "upgrade chaincode on channel '${CHANNEL_NAME}'"
+  echo
+elif [ "$MODE" == "upgradeCCDefinition" ]; then
+  echo "upgrade chaincode Definition on channel '${CHANNEL_NAME}'"
+  echo
 else
   printHelp
   exit 1
@@ -581,8 +597,10 @@ elif [ "${MODE}" == "createChannel" ]; then
   createChannel
 elif [ "${MODE}" == "deployCC" ]; then
   deployCC
-elif [ "${MODE}" == "updateCC" ]; then
-  updateCC
+elif [ "${MODE}" == "upgradeCC" ]; then
+  upgradeCC
+elif [ "${MODE}" == "upgradeCCDefinition" ]; then
+  upgradeCCDefinition
 elif [ "${MODE}" == "down" ]; then
   networkDown
 elif [ "${MODE}" == "restart" ]; then
