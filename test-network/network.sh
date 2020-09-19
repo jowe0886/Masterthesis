@@ -256,7 +256,7 @@ function createOrgs() {
     echo "##########################################################"
 
     createOrg5
-    
+
     echo "##########################################################"
     echo "############ Create Orderer Org Identities ###############"
     echo "##########################################################"
@@ -378,6 +378,9 @@ sleep 5
     echo "Error !!! Create channel failed"
     exit 1
   fi
+
+    ./replaceConnectionFiles.sh
+
 
 }
 
