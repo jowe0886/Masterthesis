@@ -304,6 +304,7 @@ Application: &ApplicationDefaults
         Endorsement:
             Type: ImplicitMeta
             Rule: "MAJORITY Endorsement"
+          #  Rule: "AND('Org1MSP.member', 'Org2MSP.member', 'Org3MSP.member','Org4MSP.member','Org5MSP.member')"
 
     Capabilities:
         <<: *ApplicationCapabilities

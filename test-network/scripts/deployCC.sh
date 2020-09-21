@@ -225,10 +225,10 @@ chaincodeInvokeInitMarbleIPDC() {
   # peer (if join was successful), let's supply it directly as we know
   # it using the "-o" option
   set -x
-  export MARBLE=$(echo -n "{\"name\":\"marble2\",\"color\":\"red\",\"size\":35,\"owner\":\"tom\",\"price\":29}" | base64 | tr -d \\n)
+  export MARBLE=$(echo -n "{\"OrdinalNumber\" :\"27\",\"UnitPrice\":1000000,\"MSPID\":\"Org1MSP\"}" | base64 | tr -d \\n)
   peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com  --tls \
    --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem  \
-   -C mychannel -n  variation_chaincode -c '{"Args":["putPrivateData"]}' --transient "{\"marble\":\"$MARBLE\"}"\
+   -C mychannel -n  variation_chaincode -c '{"Args":["addX84_data"]}' --transient "{\"variation\":\"$MARBLE\"}"\
   res=$?
   set +x
   cat log.txt
@@ -306,7 +306,7 @@ chaincodeInvokeInit 1 2 3 4 5
 # # Query chaincode on peer0.org1
 # echo "Querying chaincode on peer0.org1..."
 
-# chaincodeInvokeInitMarble 1
+#chaincodeInvokeInitMarbleIPDC 1 2
 # chaincodeQuery 1
 
 exit 0

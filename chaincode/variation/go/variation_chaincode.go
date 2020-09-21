@@ -9,10 +9,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hyperledger/fabric-chaincode-go/pkg/statebased"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
-	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
-
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -28,10 +27,10 @@ type x80 struct {
 
 // Construction work description - x81
 type x81 struct {
-	OrdinalNumber string  `json:"OrdinalNumber"` 
-	Quantity      int  `json:"Quantity"`
-	Unit          string  `json:"Unit"`
-	TotalAmount   int `json:"TotalAmount"`
+	OrdinalNumber string `json:"OrdinalNumber"`
+	Quantity      int    `json:"Quantity"`
+	Unit          string `json:"Unit"`
+	TotalAmount   int    `json:"TotalAmount"`
 }
 
 // Variation offer - x84
@@ -57,13 +56,13 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	switch function {
 	case "addX80_X81_data":
-		//create new x80 and 81 data 
+		//create new x80 and 81 data
 		return t.addX80_X81_data(stub, args)
 	case "addX84_data":
 		//create a new x84 data
 		return t.addX84Data(stub, args)
 	case "readGeneralData":
-		//read general x80 data 
+		//read general x80 data
 		return t.readGeneralData(stub, args)
 	case "readPrivateData":
 		//read private data
@@ -84,19 +83,19 @@ func (t *SimpleChaincode) addX80_X81_data(stub shim.ChaincodeStubInterface, args
 	var err error
 
 	type x81TransientInput struct {
-		OrdinalNumber string  `json:"OrdinalNumber"` //the fieldtags are needed to keep case from bouncing around
-		Quantity      int     `json:"Quantity"`
-		Unit          string  `json:"Unit"`
-		TotalAmount   int     `json:"TotalAmount"`
-		Collection	  string  `json:"Collection"`   
+		OrdinalNumber string `json:"OrdinalNumber"` //the fieldtags are needed to keep case from bouncing around
+		Quantity      int    `json:"Quantity"`
+		Unit          string `json:"Unit"`
+		TotalAmount   int    `json:"TotalAmount"`
+		Collection    string `json:"Collection"`
 	}
 
 	type result struct {
-		OrdinalNumber string  `json:"OrdinalNumber"` //the fieldtags are needed to keep case from bouncing around
-		GeneralData	  string  `json:"GeneralData"`
-		Quantity      int  	  `json:"Quantity"`
-		Unit          string  `json:"Unit"`
-		TotalAmount   int     `json:"TotalAmount"`
+		OrdinalNumber string `json:"OrdinalNumber"` //the fieldtags are needed to keep case from bouncing around
+		GeneralData   string `json:"GeneralData"`
+		Quantity      int    `json:"Quantity"`
+		Unit          string `json:"Unit"`
+		TotalAmount   int    `json:"TotalAmount"`
 	}
 
 	fmt.Println("- start init x80_x81_data")
@@ -164,7 +163,6 @@ func (t *SimpleChaincode) addX80_X81_data(stub shim.ChaincodeStubInterface, args
 	}
 	fmt.Println(x81)
 
-
 	err = stub.PutPrivateData(x81Input.Collection, x81Input.OrdinalNumber, x81JSONasBytes)
 	if err != nil {
 		return shim.Error(err.Error())
@@ -222,7 +220,7 @@ func (t *SimpleChaincode) addX80_X81_data(stub shim.ChaincodeStubInterface, args
 
 func (t *SimpleChaincode) addX84Data(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var err error
-
+	var implicitOrg string 
 	type x84TransientInput struct {
 		OrdinalNumber string `json:"OrdinalNumber"`
 		UnitPrice     int    `json:"UnitPrice"`
@@ -268,31 +266,72 @@ func (t *SimpleChaincode) addX84Data(stub shim.ChaincodeStubInterface, args []st
 	MSPID := x84Input.MSPID
 	fmt.Println("MSPID: " + MSPID)
 
+	implicitOrg = "_implicit_org_"+MSPID
+
+	
+	ep, err := statebased.NewStateEP(nil)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	
+	err = ep.AddOrgs(statebased.RoleTypePeer, "Org1")
+	if err != nil {
+		return shim.Error(err.Error())
+	}	
+
+	ep2:= ep.ListOrgs()
+
+	fmt.Println(ep2)
+
+	epBytes, err := ep.Policy()
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	err = stub.SetPrivateDataValidationParameter(implicitOrg, x84Input.OrdinalNumber, epBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	policy, err := stub.GetPrivateDataValidationParameter(implicitOrg, x84Input.OrdinalNumber ) 
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	fmt.Println(policy)
+
+	
+
 
 	err = stub.PutPrivateData("_implicit_org_"+MSPID, x84Input.OrdinalNumber, x84JSONasBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	// put private data in invokers collection
+	//put private data in invokers collection
+	fmt.Println("this is " + x84Input.OrdinalNumber + x84Input.MSPID)
+	fmt.Println(x84Input.UnitPrice)
 
-	invokerMSP, err := cid.GetMSPID(stub)
+	// invokerMSP, err := cid.GetMSPID(stub)
 
-	x84_dataAsBytes, err := stub.GetPrivateData("_implicit_org_"+invokerMSP, x84Input.OrdinalNumber)
-	if err != nil {
-		return shim.Error("Failed to get boq: " + err.Error())
-	} else if x84_dataAsBytes != nil {
-		fmt.Println("already there")
-		return shim.Success(x84JSONasBytes)
-	}
+	// x84_dataAsBytes, err := stub.GetPrivateData("_implicit_org_"+invokerMSP, x84Input.OrdinalNumber)
+	// if err != nil {
+	// 	return shim.Error("Failed to get boq: " + err.Error())
+	// } else if x84_dataAsBytes != nil {
+	// 	fmt.Println("already there")
+	// 	return shim.Success(x84JSONasBytes)
+	// }
 
+	// fmt.Println("put data in the invokers collection" + invokerMSP)
 
-	err = stub.PutPrivateData("_implicit_org_"+invokerMSP, x84Input.OrdinalNumber, x84JSONasBytes)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
+	// err = stub.PutPrivateData("_implicit_org_"+invokerMSP, x84Input.OrdinalNumber, x84JSONasBytes)
+	// if err != nil {
+	// 	return shim.Error(err.Error())
+	// }
 
 	fmt.Println("end adding x84 data")
+	fmt.Println("this is " + x84.OrdinalNumber)
+	fmt.Println(x84.UnitPrice)
+
 	return shim.Success(x84JSONasBytes)
 }
 
@@ -330,7 +369,7 @@ func (t *SimpleChaincode) readPrivateData(stub shim.ChaincodeStubInterface, args
 	if len(args) != 2 {
 		return shim.Error("Incorrect number of arguments. Expecting name of the marble to query")
 	}
-	
+
 	collection = args[0]
 	key = args[1]
 	valAsbytes, err := stub.GetPrivateData(collection, key) //get the marble private details from chaincode state
