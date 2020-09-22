@@ -25,11 +25,12 @@ writex80andx81Data() {
   echo $PWD
 
   set -x
-  export x81_data=$(echo -n "{\"OrdinalNumber\" :\"21\",\"Quantity\":10000,\"Unit\":\"m2\",\"TotalAmount\":1000000,\"Collection\":\"projectC\"}" | base64 | tr -d \\n)
+  export x81_data=$(echo -n "{\"OrdinalNumber\" :\"10\",\"Quantity\":10000,\"Unit\":\"m2\",\"TotalAmount\":1000000,\"Collection\":\"projectK\"}" | base64 | tr -d \\n)
   peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com  --tls \
    --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem  \
-  --peerAddresses localhost:9051 --tlsRootCertFiles $PEER0_ORG3_CA --peerAddresses localhost:10051 --tlsRootCertFiles $PEER0_ORG4_CA  --peerAddresses localhost:11051 --tlsRootCertFiles $PEER0_ORG5_CA \
-   -C mychannel -n  variation_chaincode -c '{"Args":["addX80_X81_data","general data"]}' --transient "{\"variation\":\"$x81_data\"}"\
+  --peerAddresses localhost:7051 --tlsRootCertFiles $PEER0_ORG1_CA   --peerAddresses localhost:9051 --tlsRootCertFiles $PEER0_ORG3_CA \
+  --peerAddresses localhost:10051 --tlsRootCertFiles $PEER0_ORG4_CA \
+  -C mychannel -n  variation_chaincode -c '{"Args":["addX80_X81_data","general data"]}' --transient "{\"variation\":\"$x81_data\"}"\
   res=$?
   set +x
   cat log.txt
@@ -38,4 +39,7 @@ writex80andx81Data() {
   echo
 }
 
-writex80andx81Data 3
+writex80andx81Data 1
+
+#--peerAddresses localhost:8051 --tlsRootCertFiles $PEER0_ORG2_CA
+#--peerAddresses localhost:11051 --tlsRootCertFiles $PEER0_ORG5_CA 

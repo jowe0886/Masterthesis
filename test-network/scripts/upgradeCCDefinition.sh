@@ -168,6 +168,7 @@ approveForMyOrg 2
 approveForMyOrg 3
 approveForMyOrg 4
 approveForMyOrg 5
+checkCommitReadiness 1
 commitChaincodeDefinition 1 2 3 4 5 
 
 exit 0

@@ -153,7 +153,6 @@ app.post('/createNewProject', async function (req, res) {
         var projectName = req.body.projectName;
         var stakeholder = req.body.stakeholder;
         var blockToLive = req.body.blockToLive;
-        var requiredSignatures = req.body.requiredSignatures;
 
 
         let collcetionConfig = fs.readFileSync('../chaincode/variation/collections_config.json');
@@ -167,9 +166,6 @@ app.post('/createNewProject', async function (req, res) {
             "maxPeerCount": 3,
             "blockToLive": blockToLive,
             "memberOnlyRead": true,
-            "endorsementPolicy": {
-                "signaturePolicy": requiredSignatures
-            }
         }
 
         collcetionConfigJSON.push(newProject)

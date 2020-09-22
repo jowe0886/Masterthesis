@@ -27,9 +27,6 @@
     "requiredPeerCount": 0,
     "maxPeerCount": 3,
     "blockToLive": 100,
-    "memberOnlyRead": true,
-    "endorsementPolicy": {
-      "signaturePolicy": "OR('Org3MSP.member','Org4MSP.member', 'Org5MSP.member')"
-    }
+    "memberOnlyRead": true
   }
 ]

@@ -246,70 +246,72 @@ Writex84Data() {
   echo
 }
 
-chaincodeQuery() {
+writex80andx81Data() {
   ORG=$1
   setGlobals $ORG
-  echo "===================== Querying on peer0.org${ORG} on channel '$CHANNEL_NAME'... ===================== "
-	local rc=1
-	local COUNTER=1
-	# continue to poll
-  # we either get a successful response, or reach MAX RETRY
-	while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ] ; do
-    sleep $DELAY
-    echo "Attempting to Query peer0.org${ORG} ...$(($(date +%s) - starttime)) secs"
-    set -x
-    peer chaincode query -C $CHANNEL_NAME -n variation_chaincode -c '{"Args":["readMarblePrivateDetails","marble1"]}' >&log.txt
-    res=$?
-    set +x
-		let rc=$res
-		COUNTER=$(expr $COUNTER + 1)
-	done
-  echo
+  verifyResult $res "Invoke transaction failed on channel '$CHANNEL_NAME' due to uneven number of peer and org parameters "
+
+  # while 'peer chaincode' command can get the orderer endpoint from the
+  # peer (if join was successful), let's supply it directly as we know
+  # it using the "-o" option
+  echo $ORG1_CA
+  echo $PWD
+
+  set -x
+  export x81_data=$(echo -n "{\"OrdinalNumber\" :\"21\",\"Quantity\":10000,\"Unit\":\"m2\",\"TotalAmount\":1000000,\"Collection\":\"projectC\"}" | base64 | tr -d \\n)
+  peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com  --tls \
+   --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem  \
+  --peerAddresses localhost:9051 --tlsRootCertFiles $PEER0_ORG3_CA --peerAddresses localhost:10051 --tlsRootCertFiles $PEER0_ORG4_CA  --peerAddresses localhost:11051 --tlsRootCertFiles $PEER0_ORG5_CA \
+   -C mychannel -n  variation_chaincode -c '{"Args":["addX80_X81_data","general data"]}' --transient "{\"variation\":\"$x81_data\"}"\
+  res=$?
+  set +x
   cat log.txt
-  if test $rc -eq 0; then
-    echo "===================== Query successful on peer0.org${ORG} on channel '$CHANNEL_NAME' ===================== "
-		echo
-  else
-    echo "!!!!!!!!!!!!!!! After $MAX_RETRY attempts, Query result on peer0.org${ORG} is INVALID !!!!!!!!!!!!!!!!"
-    echo
-    exit 1
-  fi
+  verifyResult $res "Invoke execution on $PEERS failed "
+  echo "===================== Invoke transaction successful on $PEERS on channel '$CHANNEL_NAME' ===================== "
+  echo
 }
 
-# ## at first we package the chaincode
-# packageChaincode 1
+## at first we package the chaincode
+packageChaincode 1
 
-# ## Install chaincode on peer0.org1 and peer0.org2
-# installChaincode 1
-# installChaincode 2
-# installChaincode 3
-# installChaincode 4
-# installChaincode 5
+## Install chaincode on peer0.org1 and peer0.org2
+installChaincode 1
+installChaincode 2
+installChaincode 3
+installChaincode 4
+installChaincode 5
 
-# ## query whether the chaincode is installed
-# queryInstalled 1
+## query whether the chaincode is installed
+queryInstalled 1
 
-# ## approve the definition for org1
-# approveForMyOrg 1
-# approveForMyOrg 2
-# approveForMyOrg 3
-# approveForMyOrg 4
-# approveForMyOrg 5
+## approve the definition for org1
+approveForMyOrg 1
+approveForMyOrg 2
+approveForMyOrg 3
+approveForMyOrg 4
+approveForMyOrg 5
 
-# ## check whether the chaincode definition is ready to be committed
-# checkCommitReadiness 1 
-# checkCommitReadiness 2 
+## check whether the chaincode definition is ready to be committed
+checkCommitReadiness 1 
+checkCommitReadiness 2 
 
-# ## now that we know for sure both orgs have approved, commit the definition
-# commitChaincodeDefinition 1 2 3 4 5
+## now that we know for sure both orgs have approved, commit the definition
+commitChaincodeDefinition 1 2 3 4 5
 
-# ## query on both orgs to see that the definition committed successfully
-# queryCommitted 1
-# queryCommitted 2
+## query on both orgs to see that the definition committed successfully
+queryCommitted 1
+queryCommitted 2
 
-# # Invoke the chaincode
-# chaincodeInvokeInit 1 2 3 4 5 
+# Invoke the chaincode
+chaincodeInvokeInit 1 2 3 4 5 
 
-#Writex84Data 1 
+sleep 10
+#Write x84 data
+Writex84Data 1 
+
+sleep 2
+
+#Write x80 and x81 data
+writex80andx81Data 3
 
 exit 0
