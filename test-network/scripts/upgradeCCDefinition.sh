@@ -1,7 +1,7 @@
 
 CHANNEL_NAME="$1"
 CC_SRC_LANGUAGE="$2"
-VERSION="$3"
+VERSION="1"
 Sequence="2"
 DELAY="$4"
 MAX_RETRY="$5"
@@ -150,10 +150,6 @@ chaincodeInvokeInit() {
   parsePeerConnectionParameters $@
   res=$?
   verifyResult $res "Invoke transaction failed on channel '$CHANNEL_NAME' due to uneven number of peer and org parameters "
-
-  # while 'peer chaincode' command can get the orderer endpoint from the
-  # peer (if join was successful), let's supply it directly as we know
-  # it using the "-o" option
   set -x
   peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls $CORE_PEER_TLS_ENABLED \
   --cafile $ORDERER_CA -C $CHANNEL_NAME -n variation_chaincode $PEER_CONN_PARMS \
@@ -172,10 +168,6 @@ approveForMyOrg 2
 approveForMyOrg 3
 approveForMyOrg 4
 approveForMyOrg 5
-checkCommitReadiness 1 
-checkCommitReadiness 2 
 commitChaincodeDefinition 1 2 3 4 5 
-queryCommitted 1
-queryCommitted 2
 
 exit 0

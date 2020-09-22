@@ -153,9 +153,10 @@ app.post('/createNewProject', async function (req, res) {
         var projectName = req.body.projectName;
         var stakeholder = req.body.stakeholder;
         var blockToLive = req.body.blockToLive;
+        var requiredSignatures = req.body.requiredSignatures;
 
 
-        let collcetionConfig = fs.readFileSync('../chaincode/marbles02_private/collections_config.json');
+        let collcetionConfig = fs.readFileSync('../chaincode/variation/collections_config.json');
         let collcetionConfigJSON = JSON.parse(collcetionConfig);
 
         let newProject = {
@@ -165,13 +166,33 @@ app.post('/createNewProject', async function (req, res) {
             "requiredPeerCount": 0,
             "maxPeerCount": 3,
             "blockToLive": blockToLive,
-            "memberOnlyRead": true
-
+            "memberOnlyRead": true,
+            "endorsementPolicy": {
+                "signaturePolicy": requiredSignatures
+            }
         }
+
         collcetionConfigJSON.push(newProject)
 
         let updatedCollection = JSON.stringify(collcetionConfigJSON, null, 2)
-        fs.writeFileSync('../chaincode/marbles02_private/collections_config.json', updatedCollection)
+        fs.writeFileSync('../chaincode/variation/collections_config.json', updatedCollection)
+
+
+        // create child process and uprade the cc defintion with a script
+        var cp = require("child_process");
+
+        const path = '/Users/johannesweinert/Projects/Masterthesis_tests/Abgabe/Masterthesis/test-network'
+
+        await cp.exec("./network.sh upgradeCCDefinition", { cwd: path }, function (error, stdout, stderr) {
+
+
+            const response_payload = {
+                result: stdout,
+                error: error,
+            }
+            res.send(response_payload)
+
+        });
 
 
     } catch (error) {
@@ -217,7 +238,6 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName', async function (req
         }
 
         let message = await invoke.invokeTransaction(channelName, chaincodeName, fcn, args, req.username, req.orgname, transient);
-        console.log(`message result is : ${message}`)
 
         const response_payload = {
             result: message,

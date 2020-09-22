@@ -421,6 +421,29 @@ function upgradeCCDefinition() {
   exit 0
 }
 
+function writex84Data() {
+
+  scripts/writex84Data.sh $CHANNEL_NAME $CC_SRC_LANGUAGE $VERSION $CLI_DELAY $MAX_RETRY $VERBOSE
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR !!! update chaincode failed"
+    exit 1
+  fi
+
+  exit 0
+}
+
+function writex80andx81Data() {
+
+  scripts/writex80andx81Data.sh $CHANNEL_NAME $CC_SRC_LANGUAGE $VERSION $CLI_DELAY $MAX_RETRY $VERBOSE
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR !!! update chaincode failed"
+    exit 1
+  fi
+
+  exit 0
+}
 
 # Tear down running network
 function networkDown() {
@@ -586,6 +609,12 @@ elif [ "$MODE" == "upgradeCC" ]; then
 elif [ "$MODE" == "upgradeCCDefinition" ]; then
   echo "upgrade chaincode Definition on channel '${CHANNEL_NAME}'"
   echo
+elif [ "$MODE" == "writex84Data" ]; then
+  echo "writex84Data '${CHANNEL_NAME}'"
+  echo
+elif [ "$MODE" == "writex80andx81Data" ]; then
+  echo "writex80andx81Data '${CHANNEL_NAME}'"
+  echo
 else
   printHelp
   exit 1
@@ -601,6 +630,10 @@ elif [ "${MODE}" == "upgradeCC" ]; then
   upgradeCC
 elif [ "${MODE}" == "upgradeCCDefinition" ]; then
   upgradeCCDefinition
+elif [ "${MODE}" == "writex84Data" ]; then
+  writex84Data
+elif [ "${MODE}" == "writex80andx81Data" ]; then
+  writex80andx81Data
 elif [ "${MODE}" == "down" ]; then
   networkDown
 elif [ "${MODE}" == "restart" ]; then

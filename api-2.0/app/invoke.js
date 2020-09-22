@@ -1,20 +1,10 @@
-const { Gateway, Wallets, TxEventHandler, GatewayOptions, DefaultEventHandlerStrategies, TxEventHandlerFactory } = require('fabric-network');
-const fs = require('fs');
-const path = require("path")
+const { Gateway, Wallets, DefaultEventHandlerStrategies, } = require('fabric-network');
 const log4js = require('log4js');
 const logger = log4js.getLogger('BasicNetwork');
 const util = require('util')
 
-// const createTransactionEventHandler = require('./MyTransactionEventHandler.ts')
-
 const helper = require('./helper')
 
-// const createTransactionEventHandler = (transactionId, network) => {
-//     /* Your implementation here */
-//     const mspId = network.getGateway().getIdentity().mspId;
-//     const myOrgPeers = network.getChannel().getEndorsers(mspId);
-//     return new MyTransactionEventHandler(transactionId, network, myOrgPeers);
-// }
 
 const invokeTransaction = async (channelName, chaincodeName, fcn, args, username, org_name, transientData) => {
     try {
@@ -41,17 +31,12 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, username
             return;
         }
 
-
-
         const connectOptions = {
             wallet, identity: username, discovery: { enabled: true, asLocalhost: true },
             eventHandlerOptions: {
                 commitTimeout: 100,
                 strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ALLFORTX
-            }
-            // transaction: {
-            //     strategy: createTransactionEventhandler()
-            // }
+            },
         }
 
         // Create a new gateway for connecting to peer node.
@@ -65,54 +50,36 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, username
 
         let result
         let message;
-        if (fcn === "createPrivateCarImplicitForOrg1"
-            || fcn == "createPrivateCarImplicitForOrg2") {
-            result = await contract.submitTransaction(fcn, args[0], args[1]);
-            message = `Successfully added the car asset with key ${args[0]}`
 
-        } else if (fcn === "changeCarOwner") {
-            result = await contract.submitTransaction(fcn, args[0], args[1]);
-            message = `Successfully changed car owner with key ${args[0]}`
-        } else if (fcn == "addX80_X81_data" || fcn == "updatePrivateData") {
+        if (fcn == "addX80_X81_data") {
             console.log(`Transient data is : ${transientData}`)
-            console.log("args:" + args[0])
-
             let variationData = JSON.parse(transientData)
-            console.log(`car data is : ${JSON.stringify(variationData)}`)
             let key = Object.keys(variationData)[0]
-            console.log(key)
-            console.log(variationData)
             const transientDataBuffer = {}
             transientDataBuffer[key] = Buffer.from(JSON.stringify(variationData.variation))
             result = await contract.createTransaction(fcn)
                 .setTransient(transientDataBuffer)
                 .submit(args[0])
             message = `Successfully submitted transient data`
-            console.log(result)
 
         } else if (fcn == "addX84_data") {
             console.log(`Transient data is : ${transientData}`)
             let variationData = JSON.parse(transientData)
-            console.log(`car data is : ${JSON.stringify(variationData)}`)
             let key = Object.keys(variationData)[0]
-            console.log(key)
-            console.log(variationData)
             const transientDataBuffer = {}
             transientDataBuffer[key] = Buffer.from(JSON.stringify(variationData.variation))
             result = await contract.createTransaction(fcn)
                 .setTransient(transientDataBuffer)
                 .submit()
             message = `Successfully submitted transient data`
-            console.log(result)
 
 
         } else {
-            return `Invocation require either createCar or changeCarOwner as function but got ${fcn}`
+            return `Invocation require either addX84_data or addX80_X81_data as function but got ${fcn}`
         }
 
         await gateway.disconnect();
 
-        console.log(result)
         result = JSON.parse(result.toString());
 
         let response = {
@@ -121,7 +88,6 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, username
         }
 
         return response;
-
 
     } catch (error) {
 

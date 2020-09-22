@@ -48,14 +48,10 @@ const query = async (channelName, chaincodeName, args, fcn, username, org_name) 
             result = await contract.evaluateTransaction(fcn, args[0]);
 
         } else if (fcn == "readPrivateData") {
-            console.log(fcn)
-            console.log(args[0])
-            console.log(args[1])
             result = await contract.evaluateTransaction(fcn, args[0], args[1]);
             // return result
 
         }
-        console.log(result)
         console.log(`Transaction has been evaluated, result is: ${result.toString()}`);
 
         result = JSON.parse(result.toString());

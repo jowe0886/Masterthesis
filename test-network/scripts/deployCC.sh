@@ -27,6 +27,12 @@ FABRIC_CFG_PATH=$PWD/../config/
 # import utils
 . scripts/envVar.sh
 
+export PEER0_ORG1_CA=${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+export PEER0_ORG2_CA=${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+export PEER0_ORG3_CA=${PWD}/organizations/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt
+export PEER0_ORG4_CA=${PWD}/organizations/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt
+export PEER0_ORG5_CA=${PWD}/organizations/peerOrganizations/org5.example.com/peers/peer0.org5.example.com/tls/ca.crt
+
 
 packageChaincode() {
   ORG=$1
@@ -216,19 +222,22 @@ chaincodeInvokeInitMarble() {
   echo
 }
 
-chaincodeInvokeInitMarbleIPDC() {
-  parsePeerConnectionParameters $@
-  res=$?
+Writex84Data() {
+  ORG=$1
+  setGlobals $ORG
   verifyResult $res "Invoke transaction failed on channel '$CHANNEL_NAME' due to uneven number of peer and org parameters "
 
   # while 'peer chaincode' command can get the orderer endpoint from the
   # peer (if join was successful), let's supply it directly as we know
   # it using the "-o" option
+
+
   set -x
-  export MARBLE=$(echo -n "{\"OrdinalNumber\" :\"27\",\"UnitPrice\":1000000,\"MSPID\":\"Org1MSP\"}" | base64 | tr -d \\n)
+  export x84_data=$(echo -n "{\"OrdinalNumber\" :\"27\",\"UnitPrice\":1000000,\"MSPID\":\"Org2MSP\"}" | base64 | tr -d \\n)
   peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com  --tls \
    --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem  \
-   -C mychannel -n  variation_chaincode -c '{"Args":["addX84_data"]}' --transient "{\"variation\":\"$MARBLE\"}"\
+  --peerAddresses localhost:7051 --tlsRootCertFiles $PEER0_ORG1_CA --peerAddresses localhost:8051 --tlsRootCertFiles $PEER0_ORG2_CA \
+   -C mychannel -n  variation_chaincode -c '{"Args":["addX84_data"]}' --transient "{\"variation\":\"$x84_data\"}"\
   res=$?
   set +x
   cat log.txt
@@ -267,46 +276,40 @@ chaincodeQuery() {
   fi
 }
 
-## at first we package the chaincode
-packageChaincode 1
+# ## at first we package the chaincode
+# packageChaincode 1
 
-## Install chaincode on peer0.org1 and peer0.org2
-installChaincode 1
-installChaincode 2
-installChaincode 3
-installChaincode 4
-installChaincode 5
+# ## Install chaincode on peer0.org1 and peer0.org2
+# installChaincode 1
+# installChaincode 2
+# installChaincode 3
+# installChaincode 4
+# installChaincode 5
 
-## query whether the chaincode is installed
-queryInstalled 1
+# ## query whether the chaincode is installed
+# queryInstalled 1
 
-## approve the definition for org1
-approveForMyOrg 1
-approveForMyOrg 2
-approveForMyOrg 3
-approveForMyOrg 4
-approveForMyOrg 5
+# ## approve the definition for org1
+# approveForMyOrg 1
+# approveForMyOrg 2
+# approveForMyOrg 3
+# approveForMyOrg 4
+# approveForMyOrg 5
 
-## check whether the chaincode definition is ready to be committed
-checkCommitReadiness 1 
-checkCommitReadiness 2 
+# ## check whether the chaincode definition is ready to be committed
+# checkCommitReadiness 1 
+# checkCommitReadiness 2 
 
-## now that we know for sure both orgs have approved, commit the definition
-commitChaincodeDefinition 1 2 3 4 5
+# ## now that we know for sure both orgs have approved, commit the definition
+# commitChaincodeDefinition 1 2 3 4 5
 
 # ## query on both orgs to see that the definition committed successfully
 # queryCommitted 1
 # queryCommitted 2
 
-## Invoke the chaincode
-chaincodeInvokeInit 1 2 3 4 5 
+# # Invoke the chaincode
+# chaincodeInvokeInit 1 2 3 4 5 
 
-# sleep 10
-
-# # Query chaincode on peer0.org1
-# echo "Querying chaincode on peer0.org1..."
-
-#chaincodeInvokeInitMarbleIPDC 1 2
-# chaincodeQuery 1
+#Writex84Data 1 
 
 exit 0

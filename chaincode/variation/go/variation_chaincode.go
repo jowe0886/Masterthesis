@@ -9,8 +9,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hyperledger/fabric-chaincode-go/pkg/statebased"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
+	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
 )
 
@@ -83,7 +83,7 @@ func (t *SimpleChaincode) addX80_X81_data(stub shim.ChaincodeStubInterface, args
 	var err error
 
 	type x81TransientInput struct {
-		OrdinalNumber string `json:"OrdinalNumber"` //the fieldtags are needed to keep case from bouncing around
+		OrdinalNumber string `json:"OrdinalNumber"`
 		Quantity      int    `json:"Quantity"`
 		Unit          string `json:"Unit"`
 		TotalAmount   int    `json:"TotalAmount"`
@@ -91,7 +91,7 @@ func (t *SimpleChaincode) addX80_X81_data(stub shim.ChaincodeStubInterface, args
 	}
 
 	type result struct {
-		OrdinalNumber string `json:"OrdinalNumber"` //the fieldtags are needed to keep case from bouncing around
+		OrdinalNumber string `json:"OrdinalNumber"`
 		GeneralData   string `json:"GeneralData"`
 		Quantity      int    `json:"Quantity"`
 		Unit          string `json:"Unit"`
@@ -143,8 +143,8 @@ func (t *SimpleChaincode) addX80_X81_data(stub shim.ChaincodeStubInterface, args
 	if err != nil {
 		return shim.Error("Failed to get x81Input: " + err.Error())
 	} else if x81JsonBytes != nil {
-		fmt.Println("This marble already exists: " + x81Input.OrdinalNumber)
-		return shim.Error("This marble already exists: " + x81Input.OrdinalNumber)
+		fmt.Println("This x81 data already exists: " + x81Input.OrdinalNumber)
+		return shim.Error("This x81 data already exists: " + x81Input.OrdinalNumber)
 	}
 
 	// ==== Create x81 object, marshal to JSON, and save to state ====
@@ -209,7 +209,7 @@ func (t *SimpleChaincode) addX80_X81_data(stub shim.ChaincodeStubInterface, args
 		return shim.Error(err.Error())
 	}
 
-	fmt.Println("- end init marble")
+	fmt.Println("- end init data")
 	return shim.Success(resultasBytes)
 
 }
@@ -220,7 +220,7 @@ func (t *SimpleChaincode) addX80_X81_data(stub shim.ChaincodeStubInterface, args
 
 func (t *SimpleChaincode) addX84Data(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var err error
-	var implicitOrg string 
+
 	type x84TransientInput struct {
 		OrdinalNumber string `json:"OrdinalNumber"`
 		UnitPrice     int    `json:"UnitPrice"`
@@ -259,100 +259,49 @@ func (t *SimpleChaincode) addX84Data(stub shim.ChaincodeStubInterface, args []st
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	// === Save marble to state ===
 
 	//target an I_PDC ->  _implicit_org_<MSPID>
 
 	MSPID := x84Input.MSPID
-	fmt.Println("MSPID: " + MSPID)
-
-	implicitOrg = "_implicit_org_"+MSPID
-
-	
-	ep, err := statebased.NewStateEP(nil)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	
-	err = ep.AddOrgs(statebased.RoleTypePeer, "Org1")
-	if err != nil {
-		return shim.Error(err.Error())
-	}	
-
-	ep2:= ep.ListOrgs()
-
-	fmt.Println(ep2)
-
-	epBytes, err := ep.Policy()
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	err = stub.SetPrivateDataValidationParameter(implicitOrg, x84Input.OrdinalNumber, epBytes)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	policy, err := stub.GetPrivateDataValidationParameter(implicitOrg, x84Input.OrdinalNumber ) 
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	fmt.Println(policy)
-
-	
-
 
 	err = stub.PutPrivateData("_implicit_org_"+MSPID, x84Input.OrdinalNumber, x84JSONasBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	//put private data in invokers collection
-	fmt.Println("this is " + x84Input.OrdinalNumber + x84Input.MSPID)
-	fmt.Println(x84Input.UnitPrice)
+	invokerMSP, err := cid.GetMSPID(stub)
 
-	// invokerMSP, err := cid.GetMSPID(stub)
+	fmt.Println("put data in the invokers collection" + invokerMSP)
 
-	// x84_dataAsBytes, err := stub.GetPrivateData("_implicit_org_"+invokerMSP, x84Input.OrdinalNumber)
-	// if err != nil {
-	// 	return shim.Error("Failed to get boq: " + err.Error())
-	// } else if x84_dataAsBytes != nil {
-	// 	fmt.Println("already there")
-	// 	return shim.Success(x84JSONasBytes)
-	// }
-
-	// fmt.Println("put data in the invokers collection" + invokerMSP)
-
-	// err = stub.PutPrivateData("_implicit_org_"+invokerMSP, x84Input.OrdinalNumber, x84JSONasBytes)
-	// if err != nil {
-	// 	return shim.Error(err.Error())
-	// }
+	err = stub.PutPrivateData("_implicit_org_"+invokerMSP, x84Input.OrdinalNumber, x84JSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
 
 	fmt.Println("end adding x84 data")
-	fmt.Println("this is " + x84.OrdinalNumber)
 	fmt.Println(x84.UnitPrice)
 
 	return shim.Success(x84JSONasBytes)
 }
 
 // ===============================================
-// readMarble - read a marble from chaincode state
+// readGeneralData - read a readGeneralData from chaincode state
 // ===============================================
 func (t *SimpleChaincode) readGeneralData(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var key, jsonResp string
 	var err error
 
 	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting name of the marble to query")
+		return shim.Error("Incorrect number of arguments. Expecting name of the readGeneralData to query")
 	}
 
 	key = args[0]
-	valAsbytes, err := stub.GetState(key) //get the marble from chaincode state
+	valAsbytes, err := stub.GetState(key) //get the readGeneralData from chaincode state
 	if err != nil {
 		jsonResp = "{\"Error\":\"Failed to get state for " + key + ": " + err.Error() + "\"}"
 		return shim.Error(jsonResp)
 	} else if valAsbytes == nil {
-		jsonResp = "{\"Error\":\"Marble does not exist: " + key + "\"}"
+		jsonResp = "{\"Error\":\"Gener data does not exist: " + key + "\"}"
 		return shim.Error(jsonResp)
 	}
 
@@ -360,24 +309,24 @@ func (t *SimpleChaincode) readGeneralData(stub shim.ChaincodeStubInterface, args
 }
 
 // ===============================================
-// readMarblereadMarblePrivateDetails - read a marble private details from chaincode state
+// readPrivateData - read private details from chaincode state
 // ===============================================
 func (t *SimpleChaincode) readPrivateData(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var key, collection, jsonResp string
 	var err error
 
 	if len(args) != 2 {
-		return shim.Error("Incorrect number of arguments. Expecting name of the marble to query")
+		return shim.Error("Incorrect number of arguments. Expecting name of the private data to query")
 	}
 
 	collection = args[0]
 	key = args[1]
-	valAsbytes, err := stub.GetPrivateData(collection, key) //get the marble private details from chaincode state
+	valAsbytes, err := stub.GetPrivateData(collection, key) //get the private data from chaincode state
 	if err != nil {
 		jsonResp = "{\"Error\":\"Failed to get private details for " + key + ": " + err.Error() + "\"}"
 		return shim.Error(jsonResp)
 	} else if valAsbytes == nil {
-		jsonResp = "{\"Error\":\"Marble private details does not exist: " + key + "\"}"
+		jsonResp = "{\"Error\":\"private data does not exist: " + key + "\"}"
 		return shim.Error(jsonResp)
 	}
 
